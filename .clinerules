@@ -1,0 +1,89 @@
+# Video Compare: project rules
+
+## Goal
+Fully client-side web app that loads two local video files and compares them:
+duration check, a before/after wipe divider, and one shared timeline that plays
+both videos in sync. Static deploy to Vercel or GitHub Pages.
+
+## Hard constraints
+- 100% local. No backend, uploads, analytics, or runtime network requests.
+- Use URL.createObjectURL for files; revoke on file replacement and on pagehide.
+  Never read whole files into memory (files can be several GB).
+- Vite + TypeScript (strict) + vanilla DOM. Zero runtime dependencies.
+  Dev dependencies allowed: vite, typescript, vitest. Ask before adding anything else.
+- vite.config.ts sets base: './' so one build works on Vercel and GitHub Pages.
+- Targets: latest Chrome, Edge, Safari, Firefox. Desktop-first, touch-friendly.
+
+## Architecture
+src/main.ts, src/state.ts, src/styles.css
+src/logic/   pure, DOM-free, unit-tested: format.ts, duration.ts, drift.ts
+src/sync.ts  SyncEngine: the ONLY module that controls playback of both videos
+src/ui/      dropzone.ts, stage.ts, wipe.ts, infobar.ts, controls.ts, shortcuts.ts
+tests/       Vitest specs for src/logic
+.github/workflows/deploy.yml
+PROGRESS.md  running log, updated at the end of every phase
+
+## Behavior spec
+
+### Duration check
+- Read duration on loadedmetadata. Default tolerance 0.05 s, adjustable in a settings popover.
+- Match: green status "Durations match (A 00:10.000 / B 00:10.017)".
+- Mismatch: amber status with both durations, delta in ms, and which is longer.
+  Never hard-block. A "Compare anyway" button clamps the timeline to the shorter video.
+- Time format mm:ss.mmm (hh:mm:ss.mmm over one hour).
+- Status text lives in an aria-live="polite" region.
+- NaN or Infinity duration is an error state.
+
+### Stage
+- One stage box. Both <video> elements are stacked absolutely, same size, object-fit: contain.
+- A is the bottom layer. B is clipped with clip-path: inset(0 0 0 X%), X = divider position
+  (0-100, default 50). A shows left of the divider, B shows right.
+- Vertical divider with a round handle: Pointer Events + setPointerCapture.
+  role="slider", aria-valuenow; ArrowLeft/Right = 1%, Shift+Arrow = 10%, Home/End = 0/100.
+- Tag labels pinned to the stage corners: A top-left, B top-right. They do NOT move with
+  the divider. Default text = filename without extension, ellipsis-truncated, click to rename.
+- Info bar per video: resolution, estimated FPS, duration. Warning chips if aspect ratios
+  differ or FPS differs by more than 1% (informational only; sync is time-based).
+
+### Sync engine
+- A is the master clock, B follows.
+- Play: wait for readyState >= 3 on both, seek both to the same time, play() both, await both.
+- During playback, measure drift = B.currentTime - A.currentTime using
+  requestVideoFrameCallback on A (fallback: requestAnimationFrame).
+  - |drift| > 0.04 s: hard-seek B to A.currentTime.
+  - 0.01 to 0.04 s: nudge B.playbackRate by +/-3% until drift < 0.01 s, then restore.
+- waiting/stalled on either video: pause both, resume when both can play.
+- Scrubbing: pause both while dragging, throttle seeks with rAF, update UI on seeked.
+- Timeline max = min(durationA, durationB). At the end: pause, or loop if enabled.
+- Audio selector A / B / Mute (default A); the other element is muted.
+- Cancel all callbacks and revoke URLs on file replacement and unload.
+- The drift decision is a pure function in logic/drift.ts so it can be unit tested.
+
+### Controls
+- Play/Pause, custom timeline scrubber (separate from the wipe divider), current/total time,
+  frame counter.
+- Frame step uses estimated FPS of A (from rVFC mediaTime deltas; fallback 1/30 s).
+- Speed 0.25x, 0.5x, 1x, 1.5x, 2x applied to both. Loop toggle, fullscreen, swap A/B.
+- Shortcuts (ignored while typing in a label): Space play/pause, Left/Right frame step,
+  Shift+Left/Right +/-1 s, L loop, M cycle audio, F fullscreen. A "?" popover lists them.
+
+### Errors and edge cases
+- Unsupported codec/container (ProRes, some HEVC/MKV): catch the video error event, show a
+  friendly message naming the file and suggesting re-encoding to H.264 MP4 or WebM.
+- Non-video file dropped: inline error.
+- Different resolutions/aspect ratios overlay correctly.
+- Replacing a file mid-playback resets state cleanly with no leaks.
+
+### Visual design
+Neutral dark UI, system font stack, clear focus rings, 44px minimum touch targets.
+Respect prefers-reduced-motion and prefers-color-scheme. Responsive down to ~360px.
+
+## Working agreement
+- Work ONE phase at a time. When a phase is done, stop and wait for my go-ahead.
+- Before calling a phase done, run: npm run typecheck && npm test && npm run build. Fix failures.
+- Do not build stretch features (side-by-side, difference blend, synced zoom/pan) until asked.
+- No placeholders or TODOs in code. Prefer small, focused files.
+- At the end of each phase, update PROGRESS.md: done, decisions made, next.
+- You cannot judge playback feel from the terminal. End each phase with a short list of
+  things I must verify by hand in the browser, using the files in test-media/.
+- If the spec is ambiguous or conflicts with itself, ask (max 3 questions) instead of guessing.

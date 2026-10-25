@@ -1,0 +1,6 @@
+# Normalize line endings for all text files, independent of local core.autocrlf.
+* text=auto eol=lf
+
+# Byte-exact files.
+package-lock.json -text
+*.mp4 -text

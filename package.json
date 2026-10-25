@@ -1,0 +1,20 @@
+{
+  "name": "comparitoer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Client-side video comparison: duration check, wipe divider, and synced playback. No backend, no uploads.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}
