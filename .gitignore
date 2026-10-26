@@ -16,3 +16,6 @@ test-media/
 .DS_Store
 Thumbs.db
 *.local
+
+# ffmpeg core copied from node_modules by scripts/copy-ffmpeg-core.mjs
+/public/ffmpeg/
