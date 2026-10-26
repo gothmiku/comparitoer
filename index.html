@@ -4,10 +4,172 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
-    <title>Video Compare</title>
+    <title>Comparitoer — Compare two videos in your browser</title>
+    <meta
+      name="description"
+      content="Comparitoer compares two local video files in your browser: duration check, wipe divider and frame-accurate synced playback. Nothing is uploaded."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="application-name" content="Comparitoer" />
+
+    <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f0f0f0" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Comparitoer" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="Comparitoer — Compare two videos in your browser" />
+    <meta
+      property="og:description"
+      content="Duration check, before/after wipe divider and synced playback for two local video files. No uploads, no accounts, no backend."
+    />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Comparitoer — Compare two videos in your browser" />
+    <meta
+      name="twitter:description"
+      content="Duration check, before/after wipe divider and synced playback for two local video files. No uploads, no accounts, no backend."
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Comparitoer",
+        "alternateName": "Video Compare",
+        "description": "Comparitoer compares two local video files in the browser: duration check, a before/after wipe divider and one shared timeline that plays both videos in sync. Files are never uploaded.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a modern browser with HTML5 video support: Chrome, Edge, Safari or Firefox.",
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Duration check with an adjustable tolerance",
+          "Before/after wipe divider between two stacked videos",
+          "Synced playback on one shared timeline with drift correction",
+          "Frame stepping and a frame counter",
+          "Independent playback mode with one transport per video",
+          "Audio mixing, including an optional external audio track",
+          "Local H.264 proxy conversion for formats the browser cannot decode",
+          "100% client-side: no uploads, no accounts, no runtime network requests"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
+    <noscript>
+      <p class="no-script">
+        Comparitoer needs JavaScript to play and compare videos. Your files are still never
+        uploaded — the app only runs on this device.
+      </p>
+    </noscript>
+
+    <section class="about" aria-labelledby="about-title">
+      <div class="about__inner">
+        <h2 class="about__title" id="about-title">Compare two videos locally, with Comparitoer</h2>
+        <p class="about__lead">
+          Comparitoer puts two video files on the same screen and the same clock. Check that their
+          durations agree, drag the wipe divider to flip between the old and the new take, then
+          play both in sync on one timeline. Everything runs in your browser: no uploads, no
+          accounts, no backend.
+        </p>
+
+        <h3 class="about__heading">How it works</h3>
+        <ol class="about__steps">
+          <li>
+            Drop video A and video B onto the two drop zones, or pick each one with the file
+            dialog.
+          </li>
+          <li>
+            Comparitoer reads both durations and reports whether they match within a tolerance you
+            can adjust — 0.05 seconds by default.
+          </li>
+          <li>
+            Drag the divider to compare frames, then play, scrub and step while both videos stay
+            locked together.
+          </li>
+        </ol>
+
+        <h3 class="about__heading">What you can do</h3>
+        <ul class="about__list">
+          <li>
+            <strong>Duration check.</strong> A green verdict when the two clips match, an amber one
+            with the exact difference in milliseconds when they do not, and a “compare anyway”
+            option that clamps the timeline to the shorter video.
+          </li>
+          <li>
+            <strong>Wipe divider.</strong> Video A stays underneath, video B is clipped from the
+            divider to the right edge, and the divider can be dragged by mouse, pen or finger.
+          </li>
+          <li>
+            <strong>One timeline.</strong> A is the master clock and B follows it: drift above
+            40&nbsp;ms is corrected with a seek, smaller drift with a temporary 3% playback-rate
+            nudge.
+          </li>
+          <li>
+            <strong>Independent mode.</strong> Give each video its own play button, timeline and
+            frame step when the two clips should be inspected separately.
+          </li>
+          <li>
+            <strong>Audio.</strong> Mix both soundtracks, mute one side, or load a third local audio
+            file to compare picture against a new mix.
+          </li>
+          <li>
+            <strong>Local conversion.</strong> If the browser cannot decode a file — ProRes, some
+            HEVC and MKV files — Comparitoer re-encodes a temporary H.264 proxy on your machine.
+          </li>
+        </ul>
+
+        <h3 class="about__heading">Questions</h3>
+        <div class="about__faq">
+          <details>
+            <summary>Are my videos uploaded anywhere?</summary>
+            <p>
+              No. Comparitoer has no backend, no analytics and no runtime network requests. Each
+              file is read straight from your disk into the browser and is released as soon as you
+              replace it or close the page.
+            </p>
+          </details>
+          <details>
+            <summary>Which file formats work?</summary>
+            <p>
+              Anything your browser can play: H.264 or H.265 MP4, WebM, and the MOV files that
+              Safari handles natively. Formats the browser rejects can usually be converted locally
+              to an H.264 proxy inside the app.
+            </p>
+          </details>
+          <details>
+            <summary>Does it work offline?</summary>
+            <p>
+              Yes. Once the page has loaded there is nothing else to fetch, so no upload and no
+              connection are ever needed to compare two files.
+            </p>
+          </details>
+          <details>
+            <summary>Is there a file size limit?</summary>
+            <p>
+              Playback has no artificial limit; the file is streamed from disk rather than read
+              into memory. Only the optional local conversion has a size cap, because it holds a
+              temporary copy of the result in browser memory.
+            </p>
+          </details>
+          <details>
+            <summary>What does it cost?</summary>
+            <p>Nothing. Comparitoer is free, needs no account, and runs entirely in your browser.</p>
+          </details>
+        </div>
+
+        <p class="about__note">Your files never leave this device.</p>
+      </div>
+    </section>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

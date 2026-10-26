@@ -1,30 +1,51 @@
-/* ---------------------------------------------------------------------------
-   Design tokens
-   --------------------------------------------------------------------------- */
+/* ============================================================================
+   Comparitoer — Adobe-style workspace
+   ----------------------------------------------------------------------------
+   A flat, dense, dark editing-tool surface modelled on Photoshop / After Effects:
+   charcoal panels, Spectrum blue for selection and primary actions, 3 px corners,
+   thin separators and small uppercase labels. The comparison itself is full-bleed
+   across the window; transport, inspectors and source information sit below it.
+   ========================================================================== */
 
 :root {
-  color-scheme: dark light;
+  color-scheme: dark;
 
-  --bg: #121417;
-  --bg-raised: #1a1d21;
-  --bg-inset: #0d0f11;
-  --border: #2b3037;
-  --border-strong: #3d444d;
+  --bg: #1e1e1e;
+  --bg-raised: #2b2b2b;
+  --bg-panel: #323232;
+  --bg-inset: #262626;
+  --bg-hover: #3d3d3d;
 
-  --text: #e8eaed;
-  --text-muted: #9aa3ad;
-  --text-inverse: #121417;
+  --border: #3a3a3a;
+  --border-strong: #4d4d4d;
 
-  --accent: #6aa9ff;
-  --ok: #46b26b;
-  --warn: #e0a33a;
-  --danger: #e5675f;
+  --text: #d6d6d6;
+  --text-muted: #9b9b9b;
+  --text-inverse: #ffffff;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --accent: #2680eb;
+  --accent-hover: #3b93f7;
+  --accent-soft: rgb(38 128 235 / 22%);
+  --ok: #2d9d78;
+  --warn: #e68619;
+  --danger: #d7373f;
+
+  /* Layer colours: A is Spectrum blue, B is Spectrum orange. */
+  --tag-a: #2680eb;
+  --tag-b: #e68619;
+
+  --btn-bg: #3d3d3d;
+  --btn-bg-hover: #4a4a4a;
+  --btn-bg-active: #2f2f2f;
+  --btn-border: #555555;
+  --panel-highlight: rgb(255 255 255 / 4%);
+
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
 
   --tap-target: 44px;
+  --gutter: 16px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -32,36 +53,53 @@
   --space-5: 24px;
   --space-6: 32px;
 
-  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+  --font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica,
     Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
 
   --focus-ring: 2px solid var(--accent);
-  --focus-offset: 2px;
+  --focus-offset: 1px;
+  --popover-shadow: 0 10px 28px rgb(0 0 0 / 55%);
 }
 
+/* Adobe Spectrum's light counterpart, for users who ask the OS for a light UI. */
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #f6f7f9;
+    color-scheme: light;
+
+    --bg: #f0f0f0;
     --bg-raised: #ffffff;
-    --bg-inset: #eceef1;
-    --border: #d7dbe0;
-    --border-strong: #b9bfc7;
+    --bg-panel: #f7f7f7;
+    --bg-inset: #ffffff;
+    --bg-hover: #e8e8e8;
 
-    --text: #1b1f24;
-    --text-muted: #5b6572;
-    --text-inverse: #f6f7f9;
+    --border: #d5d5d5;
+    --border-strong: #b9b9b9;
 
-    --accent: #1d5fd0;
-    --ok: #1f7a43;
-    --warn: #9a6608;
-    --danger: #b8342c;
+    --text: #2c2c2c;
+    --text-muted: #6e6e6e;
+    --text-inverse: #ffffff;
+
+    --accent: #1473e6;
+    --accent-hover: #0d66d0;
+    --accent-soft: rgb(20 115 230 / 14%);
+    --ok: #1f7a53;
+    --warn: #b25c00;
+    --danger: #c9252d;
+
+    --btn-bg: #ffffff;
+    --btn-bg-hover: #f1f1f1;
+    --btn-bg-active: #e4e4e4;
+    --btn-border: #c9c9c9;
+    --panel-highlight: transparent;
+
+    --popover-shadow: 0 10px 28px rgb(0 0 0 / 18%);
   }
 }
 
 /* ---------------------------------------------------------------------------
-   Reset
+   Reset and base
    --------------------------------------------------------------------------- */
 
 *,
@@ -72,17 +110,22 @@
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-system);
+  font-family: var(--font-ui);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -92,46 +135,1682 @@ select {
   color: inherit;
 }
 
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }
 
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Adobe apps ship a slim, square scrollbar instead of the platform default. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #555555 var(--bg);
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid var(--bg);
+  border-radius: 0;
+  background: #555555;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6e6e6e;
+}
+
 /* ---------------------------------------------------------------------------
-   App shell
+   App shell: a Photoshop-like title bar above one full-height workspace
    --------------------------------------------------------------------------- */
 
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
-  gap: var(--space-4);
-  padding: var(--space-4);
+  min-height: 100dvh;
+  background: var(--bg);
 }
 
 .app__header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 6px var(--gutter);
+  border-bottom: 1px solid #141414;
+  background: linear-gradient(#303030, #282828);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%), 0 1px 4px rgb(0 0 0 / 35%);
+}
+
+@media (prefers-color-scheme: light) {
+  .app__header {
+    border-bottom-color: #d5d5d5;
+    background: #ffffff;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
+  }
+}
+
+.app__titles {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 1px;
+  min-width: 0;
 }
 
 .app__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* Little app tile, the shorthand every Adobe product uses in its title bar. */
+.app__title::before {
+  content: "C";
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .app__tagline {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+}
+
+.app__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .app__main {
-  flex: 1;
-  min-height: 0;
   display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Shared Adobe controls: flat grey buttons, inset fields, blue focus
+   --------------------------------------------------------------------------- */
+
+.settings__trigger,
+.help__trigger,
+.settings__reset,
+.settings__track-pick,
+.settings__track-remove,
+.help__close,
+.status__action,
+.controls__play,
+.controls__toggle,
+.controls__step,
+.transport__play,
+.transport__step {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-sm);
+  background: var(--btn-bg);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.settings__trigger:hover,
+.help__trigger:hover,
+.settings__reset:hover,
+.settings__track-pick:hover,
+.settings__track-remove:hover:not(:disabled),
+.help__close:hover,
+.status__action:hover,
+.controls__play:hover:not(:disabled),
+.controls__toggle:hover:not(:disabled),
+.controls__step:hover:not(:disabled),
+.transport__play:hover:not(:disabled),
+.transport__step:hover:not(:disabled),
+.settings__trigger[aria-expanded="true"],
+.help__trigger[aria-expanded="true"] {
+  border-color: var(--accent);
+  background: var(--btn-bg-hover);
+}
+
+.settings__trigger:active,
+.help__trigger:active,
+.settings__reset:active,
+.status__action:active,
+.controls__play:active:not(:disabled),
+.controls__toggle:active:not(:disabled),
+.controls__step:active:not(:disabled),
+.transport__play:active:not(:disabled),
+.transport__step:active:not(:disabled) {
+  background: var(--btn-bg-active);
+}
+
+.controls__play:disabled,
+.controls__toggle:disabled,
+.controls__step:disabled,
+.transport__play:disabled,
+.transport__step:disabled,
+.settings__track-remove:disabled,
+.settings__track-pick:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* The play button is the one primary action, so it carries Spectrum blue. */
+.controls__play {
+  min-width: 88px;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.controls__play:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+.controls__select,
+.controls__step-unit,
+.field__input {
+  min-height: var(--tap-target);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  color: var(--text);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.field__input {
+  width: 7rem;
+  font-family: var(--font-mono);
+  cursor: text;
+}
+
+.controls__select:hover,
+.controls__step-unit:hover,
+.field__input:hover {
+  border-color: var(--border-strong);
+}
+
+.controls__select:focus-visible,
+.controls__step-unit:focus-visible,
+.field__input:focus-visible {
+  border-color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+   Loader: two source drop zones and the duration check
+   --------------------------------------------------------------------------- */
+
+.loader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 1600px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: var(--space-4) var(--gutter) var(--space-5);
+}
+
+.loader__slots {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr;
+}
+
+.loader__slot,
+.loader__status {
+  display: flex;
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  .loader__slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: inset 0 1px 0 var(--panel-highlight);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.dropzone--dragging {
+  border-color: var(--accent);
+  background: var(--bg-raised);
+}
+
+.dropzone[data-state="error"] {
+  border-color: var(--danger);
+}
+
+.dropzone--converting {
+  border-style: solid;
+  border-color: var(--accent);
+}
+
+.dropzone__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.dropzone__button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: 168px;
+  padding: var(--space-4);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropzone__button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.dropzone__slot {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dropzone__primary {
+  max-width: 100%;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropzone[data-state="ready"] .dropzone__primary,
+.dropzone[data-state="error"] .dropzone__primary {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+.dropzone[data-state="loading"] .dropzone__primary {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.dropzone__hint {
+  max-width: 100%;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropzone__error {
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-1);
+  color: var(--danger);
+  font-size: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Duration status: a slim notification strip with a Spectrum tone edge
+   --------------------------------------------------------------------------- */
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: inset 0 1px 0 var(--panel-highlight);
+}
+
+.status[data-tone="ok"] {
+  border-left-color: var(--ok);
+}
+
+.status[data-tone="warn"] {
+  border-left-color: var(--warn);
+}
+
+.status[data-tone="danger"] {
+  border-left-color: var(--danger);
+}
+
+.status__live {
+  display: flex;
+  flex: 1 1 320px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.status__message {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.status[data-tone="ok"] .status__message {
+  color: var(--ok);
+}
+
+.status[data-tone="warn"] .status__message {
+  color: var(--warn);
+}
+
+.status[data-tone="danger"] .status__message {
+  color: var(--danger);
+}
+
+.status__detail {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.status__action {
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
+   Settings and shortcut popovers: Adobe-style flyouts with a blue top edge
+   --------------------------------------------------------------------------- */
+
+.settings,
+.help {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.settings__trigger,
+.help__trigger {
+  font-weight: 600;
+}
+
+.help__trigger {
+  min-width: var(--tap-target);
+  padding: 0 var(--space-2);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.settings__panel,
+.help__panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(340px, calc(100vw - 2 * var(--gutter)));
+  max-height: min(72dvh, 640px);
+  overflow: auto;
+  padding: var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-top: 2px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: var(--popover-shadow);
+}
+
+.help__panel {
+  width: min(380px, calc(100vw - 2 * var(--gutter)));
+}
+
+.settings__panel[hidden],
+.help__panel[hidden] {
+  display: none;
+}
+
+.settings__title,
+.help__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.settings__reset {
+  align-self: flex-start;
+}
+
+.settings__track-pick,
+.settings__track-remove {
+  padding: 0 var(--space-3);
+}
+
+.settings__track-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.settings__track-remove[hidden] {
+  display: none;
+}
+
+.settings__track-status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.settings__track-status--ok {
+  color: var(--ok);
+}
+
+.settings__track-status--error {
+  color: var(--danger);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.field__input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.field__unit {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.field__hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.field__error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.75rem;
+}
+
+.settings__checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target);
+  cursor: pointer;
+}
+
+.settings__checkbox-input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings__checkbox-text {
+  font-size: 0.8125rem;
+}
+
+/* Shortcut list */
+
+.help__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.help__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.help__row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.help__keys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.help__key {
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.help__action {
+  flex: 1 1 9rem;
+  font-size: 0.8125rem;
+  text-align: right;
+}
+
+.help__note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.help__close {
+  align-self: flex-start;
+}
+
+/* ---------------------------------------------------------------------------
+   Compare workspace: full-width stage first, everything else underneath
+   --------------------------------------------------------------------------- */
+
+.compare {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  background: var(--bg);
+}
+
+.compare[hidden] {
+  display: none;
+}
+
+/* The footage is the workspace: it spans the window edge to edge. */
+.compare__stage {
+  display: flex;
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  background: #000;
+  border-bottom: 1px solid #101010;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 45%);
+}
+
+.compare__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2) var(--gutter);
+  background: var(--bg);
+}
+
+.compare__info {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2) var(--gutter) var(--space-4);
+}
+
+/* ---------------------------------------------------------------------------
+   Stage: both layers fill the box horizontally; the divider wipes between them
+   --------------------------------------------------------------------------- */
+
+.stage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
+/*
+ * The frame is as wide as the window and keeps A's shape, exactly like the program
+ * monitor in Premiere. `--stage-chrome` is the chrome that has to stay on screen below
+ * it (title bar, transport, mixer, inspector), so on a 16:9 window the frame stops at the
+ * width that still leaves room for the transport instead of pushing it out of view. The
+ * aspect ratio is never changed, and both layers use `object-fit: contain`, so a 4:3 and
+ * a 16:9 source still overlay pixel-for-pixel along the divider.
+ */
+.stage__frame {
+  --stage-ar: 1.7778;
+  --stage-chrome: 210px;
+  position: relative;
+  width: 100%;
+  max-width: max(480px, calc((100dvh - var(--stage-chrome)) * var(--stage-ar)));
+  aspect-ratio: var(--stage-ar);
+  overflow: hidden;
+  background: #000;
+  isolation: isolate;
+}
+
+/* Narrower windows wrap the transport and mixer onto more rows, so they need more room. */
+@media (max-width: 1200px) {
+  .stage__frame {
+    --stage-chrome: 252px;
+  }
+}
+
+@media (max-width: 700px) {
+  .stage__frame {
+    --stage-chrome: 330px;
+  }
+}
+
+.stage__video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.stage__video--a {
+  z-index: 1;
+}
+
+.stage__video--b {
+  z-index: 2;
+}
+
+/* ---------------------------------------------------------------------------
+   Wipe divider
+   --------------------------------------------------------------------------- */
+
+.wipe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  width: var(--tap-target);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.wipe__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  margin-left: -0.5px;
+  background: rgb(255 255 255 / 90%);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 35%);
+  pointer-events: none;
+}
+
+.wipe__handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 45%), 0 2px 8px rgb(0 0 0 / 50%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Two grip dots, drawn in CSS so no icon font or request is needed. */
+.wipe__handle::before,
+.wipe__handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.wipe__handle::before {
+  left: 10px;
+}
+
+.wipe__handle::after {
+  right: 10px;
+}
+
+.wipe:focus-visible {
+  outline: none;
+}
+
+.wipe:focus-visible .wipe__handle {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgb(38 128 235 / 55%), 0 2px 8px rgb(0 0 0 / 50%);
+}
+
+/* ---------------------------------------------------------------------------
+   Corner tags: Adobe layer chips, A blue and B orange
+   --------------------------------------------------------------------------- */
+
+.tag {
+  position: absolute;
+  top: var(--space-2);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: calc(50% - var(--space-4));
+  min-height: var(--tap-target);
+  padding: 0 var(--space-2) 0 var(--space-1);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: var(--radius-sm);
+  /* The stage backdrop is always black, so the chips keep fixed contrast values. */
+  background: rgb(24 24 24 / 78%);
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+
+.tag--a {
+  left: var(--space-2);
+}
+
+.tag--b {
+  right: var(--space-2);
+}
+
+.tag__badge {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--tag-a);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.tag--b .tag__badge {
+  background: var(--tag-b);
+}
+
+.tag__input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 24ch;
+  height: 32px;
+  padding: 0 var(--space-1);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.tag__input::placeholder {
+  color: rgb(255 255 255 / 55%);
+}
+
+.tag__input:hover {
+  border-color: rgb(255 255 255 / 30%);
+}
+
+.tag__input:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 1px;
+  border-color: transparent;
+  background: rgb(0 0 0 / 60%);
+}
+
+/* ---------------------------------------------------------------------------
+   Transport bar: Adobe tool panel with a blue primary play button
+   --------------------------------------------------------------------------- */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  width: 100%;
+  min-width: 0;
+  padding: 6px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: inset 0 1px 0 var(--panel-highlight);
+}
+
+.controls__timeline {
+  display: flex;
+  flex: 1 1 260px;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.controls__range {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 120px;
+  height: var(--tap-target);
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.controls__range:disabled {
+  cursor: not-allowed;
+}
+
+.controls__time,
+.controls__frame {
+  flex: 0 0 auto;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg-inset);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.controls__time {
+  font-size: 0.8125rem;
+}
+
+.controls__field {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.controls__label {
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.controls__toggle[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+@media (prefers-color-scheme: light) {
+  .controls__toggle[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+}
+
+/* Independent mode hides these in favour of one row per video. */
+.controls__timeline[hidden],
+.controls__steps[hidden],
+.controls__frame[hidden] {
+  display: none;
+}
+
+.controls__steps {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.controls__step {
+  min-width: var(--tap-target);
+  padding: 0;
+  font-size: 0.75rem;
+}
+
+.controls__step-unit {
+  padding: 0 var(--space-1);
+  font-size: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Independent mode: one transport row per video
+   --------------------------------------------------------------------------- */
+
+.transports {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2) var(--gutter) 0;
+}
+
+.transports[hidden] {
+  display: none;
+}
+
+.transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+  padding: 6px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: inset 0 1px 0 var(--panel-highlight);
+}
+
+.transport__badge,
+.mix__badge {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.transport[data-slot="a"] .transport__badge,
+.mix__channel[data-slot="a"] .mix__badge {
+  background: var(--tag-a);
+  color: #fff;
+}
+
+.transport[data-slot="b"] .transport__badge,
+.mix__channel[data-slot="b"] .mix__badge {
+  background: var(--tag-b);
+  color: #fff;
+}
+
+.transport__play {
+  min-width: 76px;
+}
+
+.transport__range {
+  flex: 1 1 160px;
+  min-width: 120px;
+  height: var(--tap-target);
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.transport__range:disabled {
+  cursor: not-allowed;
+}
+
+.transport__time {
+  flex: 0 0 auto;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg-inset);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.transport__step {
+  display: grid;
+  place-items: center;
+  min-width: var(--tap-target);
+  padding: 0;
+  font-size: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Audio mix: one level slider per source, plus an optional third track
+   --------------------------------------------------------------------------- */
+
+.mix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  width: 100%;
+  min-width: 0;
+  padding: 6px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: inset 0 1px 0 var(--panel-highlight);
+}
+
+.mix__title {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mix__silent {
+  flex: 0 0 auto;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mix__silent[hidden],
+.mix__note[hidden],
+.mix__channel[hidden] {
+  display: none;
+}
+
+.mix__note {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.mix__channel {
+  display: flex;
+  flex: 1 1 180px;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.mix__range {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 80px;
+  height: var(--tap-target);
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.mix__value {
+  flex: 0 0 auto;
+  min-width: 4ch;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+@media (max-width: 559px) {
+  .mix__title {
+    display: none;
+  }
+
+  .mix__channel {
+    flex: 1 1 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Info bar: a small inspector for each source, below the transport
+   --------------------------------------------------------------------------- */
+
+.infobar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.infobar__rows {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .infobar__rows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.infobar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px var(--space-2);
+  min-width: 0;
+  padding: 6px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: inset 0 1px 0 var(--panel-highlight);
+}
+
+.infobar__badge {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.infobar__row[data-slot="a"] .infobar__badge {
+  background: var(--tag-a);
+  color: #fff;
+}
+
+.infobar__row[data-slot="b"] .infobar__badge {
+  background: var(--tag-b);
+  color: #fff;
+}
+
+.infobar__name {
+  flex: 1 1 8rem;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.infobar__value {
+  flex: 0 0 auto;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.infobar__warnings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.infobar__warnings[hidden] {
+  display: none;
+}
+
+.infobar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.infobar__note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+}
+
+.info-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px var(--space-2);
+  border: 1px solid;
+  border-radius: 2px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.info-chip--aspect-ratio,
+.info-chip--fps {
+  border-color: color-mix(in srgb, var(--warn) 55%, transparent);
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+  color: var(--warn);
+}
+
+.info-chip--proxy {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+   Compact loader: the source zones become a replace strip at the very bottom
+   --------------------------------------------------------------------------- */
+
+.loader--compact {
+  max-width: none;
+  flex-direction: column-reverse;
+  gap: var(--space-2);
+  padding: 0 var(--gutter) var(--space-4);
+}
+
+.loader--compact .loader__slots {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+@media (max-width: 559px) {
+  .loader--compact .loader__slots {
+    grid-template-columns: 1fr;
+  }
+}
+
+.loader--compact .dropzone {
+  border-style: solid;
+}
+
+.loader--compact .dropzone__button {
+  min-height: 52px;
+  gap: 2px;
+  padding: var(--space-1) var(--space-2);
+}
+
+.loader--compact .dropzone__slot {
+  display: none;
+}
+
+.loader--compact .dropzone__primary {
+  font-size: 0.8125rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Fullscreen: the footage fills the screen, the inspector scrolls beneath it
+   --------------------------------------------------------------------------- */
+
+.compare:fullscreen {
+  gap: 0;
+  padding: 0;
+  overflow: auto;
+  background: var(--bg);
+}
+
+.compare:fullscreen .stage__frame {
+  max-width: 100%;
+}
+
+.compare:fullscreen .compare__controls,
+.compare:fullscreen .compare__info,
+.compare:fullscreen .transports,
+.compare:fullscreen .loader {
+  padding-right: var(--space-3);
+  padding-left: var(--space-3);
+}
+
+/* ---------------------------------------------------------------------------
+   First-visit welcome card: floats over the workspace until it is dismissed
+   --------------------------------------------------------------------------- */
+
+.welcome {
+  position: fixed;
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  left: calc(var(--gutter) + env(safe-area-inset-left, 0px));
+  z-index: 80;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: min(400px, calc(100vw - 2 * var(--gutter)));
+  padding: var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-top: 2px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  box-shadow: var(--popover-shadow);
+  animation: welcome-enter 160ms ease-out;
+}
+
+@keyframes welcome-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.welcome__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.welcome__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.welcome__body {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+/* 44 px hit area around a small glyph: the card must stay easy to close on touch. */
+.welcome__close {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  min-width: var(--tap-target);
+  min-height: var(--tap-target);
+  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.welcome__close:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------------------
+   Static content below the workspace: what the app is, for readers and crawlers
+   --------------------------------------------------------------------------- */
+
+.no-script {
+  margin: 0;
+  padding: var(--space-3) var(--gutter);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text);
+}
+
+.about {
+  padding: var(--space-6) var(--gutter) var(--space-5);
+  border-top: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.about__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(72ch, 100%);
+  margin-inline: auto;
+}
+
+.about__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.about__heading {
+  margin: var(--space-3) 0 0;
+  color: var(--text);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.about p {
+  margin: 0;
+}
+
+.about__lead {
+  color: var(--text);
+  font-size: 0.9375rem;
+}
+
+.about__steps,
+.about__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.about__steps {
+  padding-left: var(--space-5);
+}
+
+.about__list {
+  padding: 0;
+  list-style: none;
+}
+
+.about__list li {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border-strong);
+}
+
+.about strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.about__faq {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.about details {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+}
+
+.about summary {
+  padding: var(--space-2) var(--space-3);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.about summary:hover {
+  background: var(--bg-hover);
+}
+
+.about details p {
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+.about__note {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive: desktop-first, but still comfortable down to ~360 px
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 559px) {
+  :root {
+    --gutter: 12px;
+  }
+
+  .app__tagline {
+    display: none;
+  }
+
+  /* A phone has no room for a floating card beside anything: let it span the viewport. */
+  .welcome {
+    right: calc(var(--gutter) + env(safe-area-inset-right, 0px));
+    width: auto;
+  }
+
+  .app__actions {
+    position: relative;
+  }
+
+  /* Both flyouts anchor to the actions group so neither can leave the viewport. */
+  .settings,
+  .help {
+    position: static;
+  }
+
+  .controls__field,
+  .controls__frame {
+    flex: 1 1 auto;
+  }
+
+  .controls__select {
+    flex: 1 1 auto;
+  }
+
+  /* Let a full hh:mm:ss.mmm readout drop below the scrubber when it must. */
+  .controls__timeline {
+    flex-wrap: wrap;
+  }
+
+  .controls__range {
+    width: auto;
+  }
+
+  .controls__time {
+    flex: 1 1 auto;
+    text-align: right;
+  }
+
+  .tag {
+    max-width: calc(50% - var(--space-3));
+  }
+
+  .wipe__handle {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .controls {
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .compare__controls {
+    padding-top: var(--space-3);
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -148,3 +1827,4 @@ select {
     scroll-behavior: auto !important;
   }
 }
+
