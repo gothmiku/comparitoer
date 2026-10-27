@@ -85,54 +85,6 @@ dist/
     └── ffmpeg-core.wasm
 ```
 
-`vite.config.ts` sets `base: './'`, so every asset URL in `index.html` is relative. The same
-`dist/` therefore works at a domain root (Vercel) and under a repository subpath
-(`https://<user>.github.io/<repo>/`, GitHub Pages) with no rebuild and no per-host config.
-
-## Deploy to Vercel
-
-1. Push the repository to GitHub/GitLab/Bitbucket, then **Add New → Project** in Vercel and
-   import it.
-2. Pick the **Vite** framework preset and confirm:
-
-   | Setting          | Value           |
-   | ---------------- | --------------- |
-   | Framework Preset | **Vite**        |
-   | Install Command  | `npm ci`        |
-   | Build Command    | `npm run build` |
-   | Output Directory | `dist`          |
-
-3. Deploy. No environment variables, no rewrites, no `vercel.json` — the app is a single static
-   page that reads local files.
-
-Vercel runs `npm run build`, so `core:copy` runs there too and `ffmpeg/` is present in the
-deployment. Keep the build command as `npm run build`, **not** `vite build`: the bare
-`vite build` skips the core copy and leaves the converter without its decoder.
-
-## Deploy to GitHub Pages
-
-The workflow is [.github/workflows/deploy.yml](.github/workflows/deploy.yml). It runs on every
-push to `main` and on manual dispatch (**Actions → Deploy to GitHub Pages → Run workflow**).
-
-1. Repository **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. Push to `main` (or run the workflow manually).
-3. The run does `npm ci → typecheck → test → build`, uploads `dist/` with
-   `actions/upload-pages-artifact`, and publishes it with `actions/deploy-pages` to the
-   `github-pages` environment.
-4. The site lands at `https://<user>.github.io/<repo>/` — for this repository,
-   <https://gothmiku.github.io/comparitoer/>.
-
-Notes:
-
-- The workflow has `permissions: pages: write` and `id-token: write`; the deploy job uses the
-  OIDC token, so no personal access token and no `gh-pages` branch are involved.
-- A `pages` concurrency group with `cancel-in-progress: false` keeps two deploys from
-  overwriting each other.
-- The artifact is a few hundred kilobytes of JS/CSS plus the ~32 MB ffmpeg core. That is the
-  price of a converter that never calls a CDN; skipping `core:copy` would break conversion only.
-- `test-media/` is gitignored, so test fixtures never ship.
-- If the repository is renamed, nothing in the build changes (`base: './'`), but the Pages URL
-  does.
 
 ## Privacy and network use
 
